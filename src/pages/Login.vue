@@ -1,5 +1,4 @@
 <template>
-
     <div class="layout">
         <el-container>
             <el-header><span>admin</span></el-header>
@@ -25,26 +24,33 @@
 <script lang="ts" setup>
 import { ElContainer, ElForm, ElMain, ElFormItem, ElInput, ElHeader, ElButton, ElMessage } from "element-plus"
 import type { FormInstance } from 'element-plus'
-import { Ref } from "vue"
+import { Ref, ref, reactive } from "vue"
+import { useRouter } from "vue-router";
+import { reqLogin } from "@/api"
+const router = useRouter();
 
 type loginRes = {
     code: number,
     message: string,
     token: string
 }
-
-const ruleForm = reactive({
+type loginRule = {
+    account: string,
+    password: string
+}
+//表单数据
+const ruleForm = reactive<loginRule>({
     account: '',
     password: '',
 })
+//校验账号
 const checkAccount = (rule: any, value: any, callback: any) => {
     if (!value) {
         return callback(new Error('请输入账号'))
     }
     callback()
-
 }
-
+//校验密码
 const validatePassword = (rule: any, value: any, callback: any) => {
     if (value === '') {
         callback(new Error('请输入密码'))
@@ -63,7 +69,7 @@ const rules = reactive({
 })
 const ruleFormRef = ref<FormInstance>()
 //登录按键回调
-const submitForm = (formEl: FormInstance | undefined, ruleForm) => {
+const submitForm = (formEl: FormInstance | undefined, ruleForm: loginRule) => {
     if (!formEl) return;
     const reqData = {
         account: ruleForm.account,
@@ -71,18 +77,12 @@ const submitForm = (formEl: FormInstance | undefined, ruleForm) => {
     }
     formEl.validate(async (valid) => {
         if (valid) {
-            const { data } = await useFetch("/api/login", {
-                method: "post",
-                body: reqData,
-                headers: {
-                    "Content-Type": "application/json; charset=UTF-8",
-                }
-            });
-            // console.log(data);
-            const { code, token } = (data as Ref<loginRes>).value;
+            const res = await reqLogin(reqData);
+            const { code, token } = res as loginRes;
             if (code == 200) {
                 window.localStorage.setItem("token", token);
-                navigateTo("/admin");
+                ElMessage.success("登录成功");
+                router.push("/admin");
             } else {
                 ElMessage.error("登录失败");
                 return false;
@@ -112,7 +112,7 @@ const resetForm = (formEl: FormInstance | undefined) => {
     justify-content: center;
     align-items: center;
 
-    background: url(~/assets/images/loginBgImg5.jpg);
+    background: url(@/assets/images/loginBgImg5.jpg);
 
     .el-container {
         width: 8rem;

@@ -50,9 +50,10 @@
 
 <script lang='ts' setup>
 import { ElMessage } from 'element-plus';
-import { reactive, ref, nextTick } from 'vue'
+import { reactive, ref, nextTick, toRefs } from 'vue'
 import { reqAddArticle } from "@/api"
 import type { UploadProps } from 'element-plus'
+import router from '@/router';
 
 type article = {
     title: string,
@@ -66,7 +67,7 @@ type article = {
 const articleState = ref<article>({
     title: "",
     description: "",
-    categoryId: 0,
+    categoryId: 1,
     imgUrl: "",
     tag: [],
     content: "",
@@ -76,17 +77,27 @@ const categoryOptions = reactive([{
     name: "",
     id: 0
 }])
+const props = defineProps(["changeModule"])
 //提交回调
 const submit = async () => {
+    // console.log("submit");
     if (articleState.value.title.trim() == "" || articleState.value.content.trim() == "" || articleState.value.categoryId == 0) {
         ElMessage.error("不能提交空文章")
     } else {
-        let res = await reqAddArticle(articleState.value)
-        if (res.code == 200) {
-            ElMessage({
-                type: "success",
-                message: res.message
-            });
+        try {
+            let res = await reqAddArticle(articleState.value);
+            console.log(res);
+
+            if (res.code == 200) {
+                ElMessage.success(res.message);
+                props.changeModule(0);
+                console.log(articleState.value);
+            }
+        } catch (e: any) {
+            if (e.code == 401) {
+                ElMessage.error("未授权")
+                router.push({ path: "/login" })
+            }
         }
     }
 }

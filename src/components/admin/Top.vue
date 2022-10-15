@@ -41,7 +41,7 @@ const handleSelect = (key: string, keyPath: string[]) => {
     console.log(key, keyPath)
 }
 const activeIndex = computed(() => {
-    return route.path == "/admin" ? "1" : "2";
+    return route.path == "/admin" || "/" ? "1" : "2";
 })
 //跳转回调
 

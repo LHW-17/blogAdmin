@@ -1,6 +1,6 @@
 <template>
     <!-- 侧边菜单栏 -->
-    <el-menu default-active="1-1" class="el-menu-vertical-demo">
+    <el-menu :default-active="activeMenu" class="el-menu-vertical-demo">
         <el-sub-menu index="1">
             <template #title>
                 <el-icon>
@@ -26,24 +26,24 @@
             <template #title>评论管理</template>
         </el-menu-item>
     </el-menu>
-    <el-dialog v-model="centerDialogVisible" title="分类管理" width="30%" center>
+    <el-dialog v-model="centerDialogVisible" title="分类管理" width="30%" center @open="dialogOpenCallback">
         <div class="edit">
             <el-input v-model="newCategory"></el-input>
             <el-button size="default" @click="addCategory">添加分类</el-button>
         </div>
-        <el-table :data="categoryData">
-            <el-table-column label="分类名称" prop="name">
+        <el-table :data="categoryData" align="center">
+            <el-table-column label="分类名称" prop="title">
             </el-table-column>
             <el-table-column label="操作">
-                <template #default="{$index}">
-                    <el-button type="danger" size="small" @click="deleteCategory($index)">删除</el-button>
+                <template #default="{row, $index}">
+                    <el-button type="danger" size="small" @click="deleteCategory(row,$index)">删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
         <template #footer>
             <span class="dialog-footer">
                 <el-button @click="centerDialogVisible = false">取消</el-button>
-                <el-button type="primary" @click="centerDialogVisible = false">确认</el-button>
+                <el-button type="primary" @click="saveEdit">确认</el-button>
             </span>
         </template>
     </el-dialog>
@@ -56,41 +56,73 @@ import {
     Setting,
 } from '@element-plus/icons-vue'
 import { ElMenu, ElSubMenu, ElIcon, ElMenuItem, ElMessage } from "element-plus";
-import { ref, reactive } from "vue"
-
+import { ref, reactive, watch } from "vue"
+import { reqCategory, reqDeleteCategory, reqAddCategory } from "@/api"
 
 const isCollapse = ref(false)
 const props = defineProps(["changeModule"])
 //添加分类
 type category = {
-    name: string,
-    id?: number
+    title: string,
+    id?: number,
+    isDeleted?: number
 }
 const centerDialogVisible = ref(false)
 const newCategory = ref('')
-const categoryData = reactive<Array<category>>([])
-const deletedCategoryId = reactive<Array<number>>([])
+const categoryData = ref<Array<category>>([])
+const deletedCategoryId = reactive<Array<number>>([]);
+//监听dialog，改变当前选中的menu
+const activeMenu = ref("1-1");
+watch(centerDialogVisible, (newValue, oldValue) => {
+    if (newValue == false) {
+        activeMenu.value = "1-1"
+    }
+})
 const addCategory = () => {
     if (newCategory.value.trim() == "") {
         ElMessage.error("分类名称不能为空");
         return
     }
-    categoryData.push({ name: newCategory.value });
+    categoryData.value.push({ title: newCategory.value });
     newCategory.value = ""
 }
-const deleteCategory = (index: number) => {
-    categoryData.splice(index, 1);
+//删除分类回调
+const deleteCategory = async (row: category, index: number) => {
+    // console.log(row);
+    if (row.id) {
+        let res = await reqDeleteCategory(row.id);
+        if (res.code == 200) {
+            let result = await reqCategory();
+            if (result.code == 200) {
+                console.log(result);
+                categoryData.value = result.data;
+            }
+        } else {
+            ElMessage.error(res.message);
+        }
+        console.log(categoryData);
+
+    } else {
+        categoryData.value.splice(index, 1);
+    }
 }
-//按键回调
-
-
-// const handleOpen = (key: string, keyPath: string[]) => {
-//     // console.log(key, keyPath)
-// }
-// const handleClose = (key: string, keyPath: string[]) => {
-//     // console.log(key, keyPath)
-// }
-
+//分类管理打开时回调
+const dialogOpenCallback = async () => {
+    let res = await reqCategory();
+    if (res.code == 200) {
+        categoryData.value = res.data;
+    }
+    console.log(categoryData);
+}
+const saveEdit = async () => {
+    let res = await reqAddCategory(categoryData.value);
+    if (res.code == 200) {
+        centerDialogVisible.value = false;
+        ElMessage.success("成功")
+    } else {
+        ElMessage.error("保存失败")
+    }
+}
 </script>
   
 <style scoped lang="scss">

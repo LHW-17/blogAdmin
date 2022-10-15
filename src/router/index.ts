@@ -28,4 +28,12 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
 });
+router.beforeEach((to, from) => {
+  let token = localStorage.getItem("token");
+  if (to.path !== "/login" && token == undefined) {
+    return "/login";
+  } else {
+    return true;
+  }
+});
 export default router;

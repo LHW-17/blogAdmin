@@ -5,6 +5,7 @@ import useElement from "@/plugins/useElement";
 import router from "@/router";
 import useMarkdown from "./plugins/useMarkdown";
 import * as ElementPlusIconsVue from "@element-plus/icons-vue";
+import "element-plus/dist/index.css";
 
 const app = createApp(App);
 app.use(useElement);

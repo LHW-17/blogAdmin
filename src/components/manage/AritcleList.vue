@@ -7,24 +7,25 @@
         <div class="select">
             <span>分类</span>
             <el-select v-model="selection.category" class="m-2" placeholder="请选择" size="large">
-                <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
+                <el-option v-for="item in categoryOptions" :key="item.id" :label="item.name" :value="item.id" />
             </el-select>
             <span>标签</span>
-            <el-select v-model="selection.tag" class="m-2" placeholder="请选择" size="large">
+            <el-input placeholder="请输入标签" v-model="selection.tag" />
+            <!-- <el-select v-model="selection.tag" class="m-2" placeholder="请选择" size="large">
                 <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
-            </el-select>
+            </el-select> -->
             <span>状态</span>
             <el-select v-model="selection.state" class="m-2" placeholder="请选择" size="large">
-                <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
+                <el-option v-for="item in stateOptions" :key="item.value" :label="item.key" :value="item.value" />
             </el-select>
             <span>文章标题</span>
-            <el-input placeholder="请输入标题关键词" />
+            <el-input placeholder="请输入标题关键词" v-model="selection.title" />
             <el-button type="primary">查询</el-button>
         </div>
         <div class="articleList">
-            <el-table :data="tableData">
-                <el-table-column prop="title" label="文章标题" width="180" align="center" />
-                <el-table-column prop="category" label="文章分类" width="180" align="center" />
+            <el-table :data="articleList">
+                <el-table-column prop="articleTitle" label="文章标题" width="180" align="center" />
+                <el-table-column prop="cTitle" label="文章分类" width="180" align="center" />
                 <el-table-column prop="tag" label="标签" align="center">
                     <template #default="scope">
                         <el-tag class="ml-2" type="success" v-for="(item, index) in scope.row.tag" :key="index">{{item}}
@@ -46,8 +47,8 @@
 </template>
 
 <script lang='ts' setup>
-import { ref, reactive } from 'vue'
-
+import { ref, reactive, onBeforeMount, onMounted } from 'vue'
+import { reqArticleList, reqCategory } from "@/api"
 const props = defineProps(["changeModule"])
 const selection = reactive({
     category: "",
@@ -55,59 +56,50 @@ const selection = reactive({
     state: "",
     title: ""
 })
-
-const options = [
+type listItem = {
+    id: number,
+    title: string,
+    categoryName: string,
+    tag: string | string[],
+    createTime: string,
+    updateTime: string
+}
+const articleList = ref<Array<listItem>>()
+//获取列表数据
+// type listItem = {
+//     id:number,
+//     title:string,
+//     categoryId:number,
+//     tag:string | s
+// }
+onBeforeMount(async () => {
+    const res = await reqArticleList();
+    if (res.code == 200) {
+        articleList.value = res.data.data.map((item: listItem) => {
+            item.tag = (item.tag as string).split('-');
+            return item;
+        });
+        // console.log(articleList);
+    }
+})
+//选项数据
+const stateOptions = [
     {
-        value: 'Option1',
-        label: 'Option1',
+        key: "编辑中",
+        value: 0
     },
     {
-        value: 'Option2',
-        label: 'Option2',
-    },
-    {
-        value: 'Option3',
-        label: 'Option3',
-    },
-    {
-        value: 'Option4',
-        label: 'Option4',
-    },
-    {
-        value: 'Option5',
-        label: 'Option5',
-    },
+        key: "已发布",
+        value: 1
+    }
 ]
-const tableData = [
-    {
-        title: "flak京东方",
-        category: "前端",
-        tag: ["faksld", "asdfa"],
-        createTime: "fasdfasd",
-        updateTime: "fdsafsdf",
-    },
-    {
-        title: "flak京东方",
-        category: "前端",
-        tag: ["faksld", "asdfa"],
-        createTime: "fasdfasd",
-        updateTime: "fdsafsdf",
-    },
-    {
-        title: "flak京东方",
-        category: "前端",
-        tag: ["faksld", "asdfa"],
-        createTime: "fasdfasd",
-        updateTime: "fdsafsdf",
-    },
-    {
-        title: "flak京东方",
-        category: "前端",
-        tag: ["faksld", "asdfa"],
-        createTime: "fasdfasd",
-        updateTime: "fdsafsdf",
-    },
-]
+const categoryOptions = ref<Array<{ name: string, id: number }>>([]);
+onMounted(async () => {
+    let res = await reqCategory();
+    if (res.code == 200) {
+        categoryOptions.value = res.data;
+    }
+})
 </script>
 
 <style scoped lang="scss">
@@ -162,6 +154,8 @@ const tableData = [
 
     .articleList {
         width: 100%;
+        height: 7.5rem;
+        overflow: auto;
 
         .el-tag {
             margin-left: .1rem;
