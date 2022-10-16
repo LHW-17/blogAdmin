@@ -35,20 +35,22 @@
                 <el-table-column prop="createTime" label="创建时间" align="center" />
                 <el-table-column prop="updateTime" label="更新时间" align="center" />
                 <el-table-column label="操作" align="center">
-                    <template #default>
-                        <el-button type="primary" size="small">编辑</el-button>
-                        <el-button type="danger" size="small">删除</el-button>
+                    <template #default="{row}">
+                        <el-button type="primary" size="small" @click="editHandler(row)">编辑</el-button>
+                        <el-button type="danger" size="small" @click="deleteArticle(row.id)">删除</el-button>
                     </template>
                 </el-table-column>
             </el-table>
         </div>
+
     </div>
 
 </template>
 
 <script lang='ts' setup>
 import { ref, reactive, onBeforeMount, onMounted } from 'vue'
-import { reqArticleList, reqCategory } from "@/api"
+import { reqArticleList, reqCategory, reqDeleteArticle } from "@/api"
+import { ElMessage, ElMessageBox } from 'element-plus';
 const props = defineProps(["changeModule"])
 const selection = reactive({
     category: "",
@@ -58,8 +60,9 @@ const selection = reactive({
 })
 type listItem = {
     id: number,
-    title: string,
-    categoryName: string,
+    articleTitle: string,
+    cTitle: string,
+    categoryId: number,
     tag: string | string[],
     createTime: string,
     updateTime: string
@@ -72,7 +75,7 @@ const articleList = ref<Array<listItem>>()
 //     categoryId:number,
 //     tag:string | s
 // }
-onBeforeMount(async () => {
+const getArticleList = async () => {
     const res = await reqArticleList();
     if (res.code == 200) {
         articleList.value = res.data.data.map((item: listItem) => {
@@ -81,6 +84,9 @@ onBeforeMount(async () => {
         });
         // console.log(articleList);
     }
+}
+onBeforeMount(() => {
+    getArticleList()
 })
 //选项数据
 const stateOptions = [
@@ -93,13 +99,44 @@ const stateOptions = [
         value: 1
     }
 ]
+//分类数据
 const categoryOptions = ref<Array<{ name: string, id: number }>>([]);
+
 onMounted(async () => {
     let res = await reqCategory();
     if (res.code == 200) {
         categoryOptions.value = res.data;
     }
 })
+//编辑按键功能 触发emit传递数据
+const emit = defineEmits(["deliverAritcleId"]);
+const editHandler = (row: listItem) => {
+    emit("deliverAritcleId", row.id);
+    props.changeModule(1);
+}
+//删除文章功能
+const deleteArticle = (id: number) => {
+    ElMessageBox.confirm("确认删除文章？", {
+        confirmButtonText: "确认",
+        cancelButtonText: "取消",
+        type: "warning"
+    }).then(async () => {
+        let res = await reqDeleteArticle(id);
+        console.log(res);
+        if (res.code == 200) {
+            ElMessage.success("删除成功");
+            getArticleList();
+        } else {
+            ElMessage.error("失败");
+        }
+    }).catch(() => {
+        ElMessage({
+            type: 'info',
+            message: '删除取消',
+        })
+    })
+
+}
 </script>
 
 <style scoped lang="scss">

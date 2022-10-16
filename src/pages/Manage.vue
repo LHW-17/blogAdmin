@@ -1,7 +1,9 @@
 <template>
     <div class="content">
         <LeftTag :changeModule="changeModule" />
-        <component :is="moduleList[currentModule]" class="block" :changeModule="changeModule"></component>
+        <component :is="moduleList[currentModule]" class="block" :changeModule="changeModule" :data="emitData"
+            @deliverAritcleId="onDeliver">
+        </component>
     </div>
 </template>
 
@@ -15,6 +17,11 @@ const moduleList = [AritcleList, Add]
 const currentModule = ref(0)
 const changeModule = (index: number) => {
     currentModule.value = index;
+}
+//向add组件传递的数据
+const emitData = ref(-1)
+const onDeliver = (id: number) => {
+    emitData.value = id;
 }
 </script>
 

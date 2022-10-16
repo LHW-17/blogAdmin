@@ -17,7 +17,7 @@
             <div class="select">
                 <span>文章分类</span>
                 <el-select v-model="articleState.categoryId" class="m-2" placeholder="请选择分类" size="large">
-                    <el-option v-for="item in categoryOptions" :key="item.id" :label="item.name" :value="item.id" />
+                    <el-option v-for="item in categoryOptions" :key="item.id" :label="item.title" :value="item.id" />
                 </el-select>
                 <span>文章状态</span>
                 <el-select v-model="articleState.stateNum" class="m-2" placeholder="请选择文章状态" size="large">
@@ -50,8 +50,8 @@
 
 <script lang='ts' setup>
 import { ElMessage } from 'element-plus';
-import { reactive, ref, nextTick, toRefs } from 'vue'
-import { reqAddArticle } from "@/api"
+import { onMounted, reactive, ref, nextTick, toRefs } from 'vue'
+import { reqAddArticle, reqCategory, reqArticleById } from "@/api"
 import type { UploadProps } from 'element-plus'
 import router from '@/router';
 
@@ -73,11 +73,14 @@ const articleState = ref<article>({
     content: "",
     stateNum: 0
 })
-const categoryOptions = reactive([{
-    name: "",
-    id: 0
-}])
-const props = defineProps(["changeModule"])
+type category = {
+    title: string,
+    id?: number,
+    isDeleted?: number
+}
+const categoryOptions = ref<Array<category>>([])
+//props参数
+const props = defineProps(["changeModule", "data"])
 //提交回调
 const submit = async () => {
     // console.log("submit");
@@ -97,6 +100,8 @@ const submit = async () => {
             if (e.code == 401) {
                 ElMessage.error("未授权")
                 router.push({ path: "/login" })
+            } else if (e.code == 500) {
+                ElMessage.error("提交失败");
             }
         }
     }
@@ -126,7 +131,23 @@ const handleInputConfirm = () => {
     inputVisible.value = false
     inputValue.value = ''
 }
-//上传图片
+//编辑时获取文章信息
+//获取分类信息
+onMounted(async () => {
+    console.log(props.data);
+    let res1 = await reqCategory();
+    if (res1.code == 200) {
+        categoryOptions.value = res1.data;
+    }
+    let res2 = await reqArticleById(props.data);
+    if (res2.code == 200) {
+        res2.data[0].tag = res2.data[0].tag.split("-")
+        articleState.value = res2.data[0];
+    }
+    console.log(res1);
+    console.log(res2);
+
+})
 </script>
 
 <style scoped lang="scss">

@@ -26,7 +26,8 @@
             <template #title>评论管理</template>
         </el-menu-item>
     </el-menu>
-    <el-dialog v-model="centerDialogVisible" title="分类管理" width="30%" center @open="dialogOpenCallback">
+    <el-dialog v-model="centerDialogVisible" title="分类管理" width="30%" center @open="dialogOpenCallback"
+        @close="closeEffect">
         <div class="edit">
             <el-input v-model="newCategory"></el-input>
             <el-button size="default" @click="addCategory">添加分类</el-button>
@@ -47,6 +48,7 @@
             </span>
         </template>
     </el-dialog>
+    <div class="transparent" ref="trigger">123</div>
 </template>
   
 <script lang="ts" setup>
@@ -56,7 +58,7 @@ import {
     Setting,
 } from '@element-plus/icons-vue'
 import { ElMenu, ElSubMenu, ElIcon, ElMenuItem, ElMessage } from "element-plus";
-import { ref, reactive, watch } from "vue"
+import { ref, nextTick, watch } from "vue"
 import { reqCategory, reqDeleteCategory, reqAddCategory } from "@/api"
 
 const isCollapse = ref(false)
@@ -70,14 +72,17 @@ type category = {
 const centerDialogVisible = ref(false)
 const newCategory = ref('')
 const categoryData = ref<Array<category>>([])
-const deletedCategoryId = reactive<Array<number>>([]);
 //监听dialog，改变当前选中的menu
 const activeMenu = ref("1-1");
-watch(centerDialogVisible, (newValue, oldValue) => {
-    if (newValue == false) {
+const trigger = ref();
+const closeEffect = () => {
+    activeMenu.value = "";
+    trigger.value.style.visibility = "visible";
+    nextTick(() => {
         activeMenu.value = "1-1"
-    }
-})
+        trigger.value.style.visibility = "hidden";
+    })
+}
 const addCategory = () => {
     if (newCategory.value.trim() == "") {
         ElMessage.error("分类名称不能为空");
@@ -94,7 +99,7 @@ const deleteCategory = async (row: category, index: number) => {
         if (res.code == 200) {
             let result = await reqCategory();
             if (result.code == 200) {
-                console.log(result);
+                // console.log(result);
                 categoryData.value = result.data;
             }
         } else {
@@ -112,7 +117,7 @@ const dialogOpenCallback = async () => {
     if (res.code == 200) {
         categoryData.value = res.data;
     }
-    console.log(categoryData);
+    // console.log(categoryData);
 }
 const saveEdit = async () => {
     let res = await reqAddCategory(categoryData.value);
@@ -126,6 +131,11 @@ const saveEdit = async () => {
 </script>
   
 <style scoped lang="scss">
+.transparent {
+    position: absolute;
+    visibility: hidden;
+}
+
 .el-menu-vertical-demo:not(.el-menu--collapse) {
     width: 3.3rem;
     min-width: 3.3rem;

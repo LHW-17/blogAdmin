@@ -22,7 +22,6 @@ request.interceptors.response.use(
   (response) => {
     const res = response.data;
     // console.log(res);
-
     if (res.code !== 200) {
       // alert(res.message || "error");
       return Promise.reject(new Error(res.message || "error"));
@@ -36,10 +35,16 @@ request.interceptors.response.use(
       switch (error.response.status) {
         case 401:
           localStorage.removeItem("token");
+          router.replace({
+            path: "/login",
+          });
           return Promise.reject({ code: 401, message: "token failed" });
         //token过期，重新登录
         case 403:
           localStorage.removeItem("token");
+          router.replace({
+            path: "/login",
+          });
           return Promise.reject({ code: 403, message: "token failed" });
           break;
         default:

@@ -6,9 +6,9 @@
         </div>
         <div class="middle">
             <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" background-color="#545c64"
-                text-color="#fff" active-text-color="#ffd04b" @select="handleSelect">
-                <el-menu-item index="1" @click="$router.push('/admin')">首页</el-menu-item>
-                <el-menu-item index="2" @click="$router.push('/admin/manage')">控制台</el-menu-item>
+                text-color="#fff" active-text-color="#ffd04b" router>
+                <el-menu-item index="/admin">首页</el-menu-item>
+                <el-menu-item index="/admin/manage">控制台</el-menu-item>
             </el-menu>
         </div>
         <div class="right">
@@ -37,11 +37,8 @@ import { useRoute } from "vue-router"
 import { ArrowDown } from '@element-plus/icons-vue'
 
 const route = useRoute();
-const handleSelect = (key: string, keyPath: string[]) => {
-    console.log(key, keyPath)
-}
 const activeIndex = computed(() => {
-    return route.path == "/admin" || "/" ? "1" : "2";
+    return route.path || "/admin";
 })
 //跳转回调
 

@@ -50,3 +50,17 @@ export const reqAddCategory = (
     data,
     method: "post",
   });
+export const reqArticleById = (id: number) =>
+  request({
+    url: "/getArticleById",
+    method: "get",
+    params: { id },
+  });
+export const reqDeleteArticle = (id: number) =>
+  request({
+    url: "/deleteArticle",
+    method: "get",
+    params: {
+      id,
+    },
+  });
