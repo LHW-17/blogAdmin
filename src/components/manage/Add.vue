@@ -4,7 +4,10 @@
             <div class="title">
                 <span>文章标题</span>
                 <el-input placeholder="请输入文章标题" v-model="articleState.title"></el-input>
-                <el-button type="success" @click="submit">提交</el-button>
+                <div class="buttonGroup">
+                    <el-button type="success" @click="submit">提交</el-button>
+                    <el-button type="primary" @click="cancel">取消</el-button>
+                </div>
             </div>
             <div class="description">
                 <span>文章描述</span>
@@ -49,7 +52,7 @@
 </template>
 
 <script lang='ts' setup>
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { onMounted, reactive, ref, nextTick, toRefs } from 'vue'
 import { reqAddArticle, reqCategory, reqArticleById } from "@/api"
 import type { UploadProps } from 'element-plus'
@@ -89,12 +92,12 @@ const submit = async () => {
     } else {
         try {
             let res = await reqAddArticle(articleState.value);
-            console.log(res);
+            // console.log(res);
 
             if (res.code == 200) {
-                ElMessage.success(res.message);
+                ElMessage.success("保存成功");
                 props.changeModule(0);
-                console.log(articleState.value);
+                // console.log(articleState.value);
             }
         } catch (e: any) {
             if (e.code == 401) {
@@ -106,7 +109,17 @@ const submit = async () => {
         }
     }
 }
-
+//取消回调
+const cancel = () => {
+    ElMessageBox.confirm("修改不会被保存", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消"
+    }).then(() => {
+        props.changeModule(0);
+    }).catch(() => {
+        ElMessage.info("取消")
+    })
+}
 
 //tag
 const inputValue = ref('')
@@ -134,19 +147,17 @@ const handleInputConfirm = () => {
 //编辑时获取文章信息
 //获取分类信息
 onMounted(async () => {
-    console.log(props.data);
     let res1 = await reqCategory();
     if (res1.code == 200) {
         categoryOptions.value = res1.data;
     }
-    let res2 = await reqArticleById(props.data);
-    if (res2.code == 200) {
-        res2.data[0].tag = res2.data[0].tag.split("-")
-        articleState.value = res2.data[0];
+    if (props.data != -1) {
+        let res2 = await reqArticleById(props.data);
+        if (res2.code == 200) {
+            res2.data[0].tag = JSON.parse(res2.data[0].tag)
+            articleState.value = res2.data[0];
+        }
     }
-    console.log(res1);
-    console.log(res2);
-
 })
 </script>
 
@@ -182,7 +193,7 @@ onMounted(async () => {
                 width: 40%;
             }
 
-            .el-button {
+            .buttonGroup {
                 position: absolute;
                 right: 1rem;
             }

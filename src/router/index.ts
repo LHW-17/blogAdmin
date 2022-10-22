@@ -31,16 +31,12 @@ const router = createRouter({
 router.beforeEach((to, from) => {
   let token = localStorage.getItem("token");
   if (to.path != "/login") {
-    // console.log(123);
-
     if (!token) {
       return "/login";
     } else {
       return true;
     }
   } else {
-    // console.log(456);
-
     if (!token) {
       return true;
     } else {

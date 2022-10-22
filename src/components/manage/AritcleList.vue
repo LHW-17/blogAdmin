@@ -2,25 +2,22 @@
     <div class="wraper">
         <div class="tag">
             <span>文章列表</span>
-            <el-button @click="changeModule(1)">添加文章</el-button>
+            <el-button @click="addArticle">添加文章</el-button>
         </div>
         <div class="select">
             <span>分类</span>
-            <el-select v-model="selection.category" class="m-2" placeholder="请选择" size="large">
+            <el-select v-model="selection.categoryId" class="m-2" placeholder="请选择" size="large">
                 <el-option v-for="item in categoryOptions" :key="item.id" :label="item.name" :value="item.id" />
             </el-select>
             <span>标签</span>
             <el-input placeholder="请输入标签" v-model="selection.tag" />
-            <!-- <el-select v-model="selection.tag" class="m-2" placeholder="请选择" size="large">
-                <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
-            </el-select> -->
             <span>状态</span>
             <el-select v-model="selection.state" class="m-2" placeholder="请选择" size="large">
                 <el-option v-for="item in stateOptions" :key="item.value" :label="item.key" :value="item.value" />
             </el-select>
             <span>文章标题</span>
             <el-input placeholder="请输入标题关键词" v-model="selection.title" />
-            <el-button type="primary">查询</el-button>
+            <el-button type="primary" @click="searchArtcle">查询</el-button>
         </div>
         <div class="articleList">
             <el-table :data="articleList">
@@ -49,15 +46,10 @@
 
 <script lang='ts' setup>
 import { ref, reactive, onBeforeMount, onMounted } from 'vue'
-import { reqArticleList, reqCategory, reqDeleteArticle } from "@/api"
+import { reqArticleList, reqCategory, reqDeleteArticle, reqSearchArticle } from "@/api"
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { type } from 'os';
 const props = defineProps(["changeModule"])
-const selection = reactive({
-    category: "",
-    tag: "",
-    state: "",
-    title: ""
-})
 type listItem = {
     id: number,
     articleTitle: string,
@@ -68,21 +60,14 @@ type listItem = {
     updateTime: string
 }
 const articleList = ref<Array<listItem>>()
-//获取列表数据
-// type listItem = {
-//     id:number,
-//     title:string,
-//     categoryId:number,
-//     tag:string | s
-// }
+
 const getArticleList = async () => {
     const res = await reqArticleList();
     if (res.code == 200) {
         articleList.value = res.data.data.map((item: listItem) => {
-            item.tag = (item.tag as string).split('-');
+            item.tag = JSON.parse(item.tag as string);
             return item;
         });
-        // console.log(articleList);
     }
 }
 onBeforeMount(() => {
@@ -108,10 +93,15 @@ onMounted(async () => {
         categoryOptions.value = res.data;
     }
 })
-//编辑按键功能 触发emit传递数据
+//编辑按键功能 触发父组件emit向add组件传递数据
 const emit = defineEmits(["deliverAritcleId"]);
 const editHandler = (row: listItem) => {
     emit("deliverAritcleId", row.id);
+    props.changeModule(1);
+}
+//添加文章回调
+const addArticle = () => {
+    emit("deliverAritcleId", -1);
     props.changeModule(1);
 }
 //删除文章功能
@@ -136,6 +126,25 @@ const deleteArticle = (id: number) => {
         })
     })
 
+}
+
+/*
+    查询文章功能
+ */
+type Selection = {
+    categoryId?: number,
+    tag?: string,
+    state?: number,
+    title?: string
+}
+const selection = reactive<Selection>({
+    tag: "",
+    title: ""
+})
+//查询按钮回调
+const searchArtcle = async () => {
+    let res = await reqSearchArticle(selection)
+    console.log(res);
 }
 </script>
 

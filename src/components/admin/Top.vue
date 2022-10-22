@@ -2,7 +2,7 @@
     <div class="top">
         <div class="left">
             <img class="logo" src="@/assets/images/logo.jpg" alt="echo">
-            <span>My Blog</span>
+            <span></span>
         </div>
         <div class="middle">
             <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" background-color="#545c64"

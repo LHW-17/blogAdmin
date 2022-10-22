@@ -1,5 +1,6 @@
 import request from "@/utils/request";
 import { id } from "element-plus/es/locale";
+import { type } from "os";
 export const reqLogin = (data: {}) => {
   return request({
     url: "/login",
@@ -63,4 +64,16 @@ export const reqDeleteArticle = (id: number) =>
     params: {
       id,
     },
+  });
+type Selection = {
+  categoryId?: number;
+  tag?: string;
+  state?: number;
+  title?: string;
+};
+export const reqSearchArticle = (option: Selection) =>
+  request({
+    url: "/searchArticle",
+    method: "post",
+    data: option,
   });
